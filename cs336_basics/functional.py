@@ -29,8 +29,14 @@ def cross_entropy(inputs: Tensor, targets: Tensor) -> Tensor:
 
 def scaled_dot_product_attention(Q: Tensor, K: Tensor, V: Tensor, mask: Tensor | None = None) -> Tensor:
     """Q: (..., Q, d_k), K: (..., K, d_k), V: (..., K, d_v), mask: (..., Q, K) bool"""
-    
-    raise NotImplementedError
+    dk = Q.size(-1)
+    scores = (Q @ K.transpose(-1,-2)) / math.sqrt(dk)
+    if mask is not None:
+        scores = scores.masked_fill(~mask, float("-inf"))
+    probs = softmax(scores, dim=-1)
+    probs = torch.nan_to_num(probs, nan=0.0)
+    attn = probs @ V
+    return attn
 
 def get_lr_cosine_schedule(
     it: int,

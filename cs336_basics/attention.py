@@ -2,6 +2,7 @@ import torch
 from torch import Tensor
 from .functional import scaled_dot_product_attention
 from .rope import RoPECache, apply_rope
+from layers import linear
 
 def mha(
     q_proj_weight: Tensor,
@@ -12,7 +13,12 @@ def mha(
     num_heads: int,
 ) -> Tensor:
     """x:(..., T, d_model) -> (..., T, d_model)"""
-    raise NotImplementedError
+    b, t, d = x.size()
+    d_head = dk / num_heads
+    Q = linear(q_proj_weight,x).view()
+    K = linear(k_proj_weight,x)
+    V = linear(v_proj_weight,x)
+    return scaled_dot_product_attention(Q,K,V)
 
 def mha_with_rope(
     q_proj_weight: Tensor,
@@ -24,4 +30,9 @@ def mha_with_rope(
     rope_cache: RoPECache,
     token_positions: Tensor | None = None,
 ) -> Tensor:
-    raise NotImplementedError
+    Q = linear(q_proj_weight,x)
+    K = linear(k_proj_weight,x)
+    V = linear(v_proj_weight,x)
+    Q = apply_rope(Q)
+    K = apply_rope(K)
+    return scaled_dot_product_attention(Q,K,V)
