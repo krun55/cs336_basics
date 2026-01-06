@@ -6,13 +6,18 @@ class RoPECache:
         # TODO: build cos/sin cache (max_seq_len, d_k/2)
         assert d_k % 2 == 0
         half = d_k // 2
-        device = device if device is not None else device = torch.device("cpu")
+        device = device if device is not None else torch.device("cpu")
         pos = torch.arange(max_seq_len, device=device, dtype=torch.float32)
         k = torch.arange(half, device=device, dtype=torch.float32)
         inv_freq = base ** (-2*k/d_k)
         angles = pos[:, None] * inv_freq[None, :]
-        self.cos = torch.cos(angles)
-        self.sin = torch.sin(angles)
+        cos = torch.cos(angles)
+        sin = torch.sin(angles)
+        if dtype is not None:
+            cos = cos.to(dtype=dtype)
+            sin = sin.to(dtype=dtype)
+        self.cos = cos
+        self.sin = sin
 
 def apply_rope(x: Tensor, token_positions: Tensor, cache: RoPECache) -> Tensor:
     """x:(..., T, d_k), token_positions:(..., T)"""

@@ -9,6 +9,7 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
+import cs336_basics as student
 
 def run_linear(
     d_in: int,
@@ -51,7 +52,7 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    raise NotImplementedError
+    return student.embedding(vocab_size, d_model, weights, token_ids)
 
 
 def run_swiglu(
@@ -104,7 +105,7 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    return student.scaled_dot_product_attention(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -138,7 +139,14 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    return student.mha(
+        q_proj_weight=q_proj_weight,
+        k_proj_weight=k_proj_weight,
+        v_proj_weight=v_proj_weight,
+        o_proj_weight=o_proj_weight,
+        x=in_features,
+        num_heads=num_heads,
+    )
 
 
 def run_multihead_self_attention_with_rope(
@@ -178,7 +186,23 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    rope_cache = student.RoPECache(
+        d_k=d_model // num_heads,
+        base=theta,
+        max_seq_len=max_seq_len,
+        device=in_features.device,
+        dtype=in_features.dtype,
+    )
+    return student.mha_with_rope(
+        q_proj_weight=q_proj_weight,
+        k_proj_weight=k_proj_weight,
+        v_proj_weight=v_proj_weight,
+        o_proj_weight=o_proj_weight,
+        x=in_features,
+        num_heads=num_heads,
+        rope_cache=rope_cache,
+        token_positions=token_positions,
+    )
 
 
 def run_rope(
@@ -200,7 +224,14 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    cache = student.RoPECache(
+        d_k=d_k,
+        base=theta,
+        max_seq_len=max_seq_len,
+        device=in_query_or_key.device,
+        dtype=in_query_or_key.dtype,
+    )
+    return student.apply_rope(in_query_or_key, token_positions, cache)
 
 
 def run_transformer_block(

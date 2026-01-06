@@ -8,10 +8,10 @@ def silu(x: Tensor) -> Tensor:
 def softmax(x: Tensor, dim: int) -> Tensor:
     if dim < 0:
         dim += x.dim()
-    m = torch.amax(x, axis=dim, keepdim = True)
+    m = torch.amax(x, dim=dim, keepdim=True)
     z = x - m
     e = torch.exp(z)
-    s = torch.sum(e, axis=dim, keepdim = True)
+    s = torch.sum(e, dim=dim, keepdim=True)
     y = e / s
     return y
 
